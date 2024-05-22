@@ -1,0 +1,33 @@
+name: Perform Mixeway Scan
+
+jobs:
+  mixeway-scan:
+    name: Mixeway Scanning
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Prepare variables
+      id: vars
+      shell: bash
+      run: |
+        echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+    - name: Prepare Mixeway docker image
+      run: |
+        docker pull mixeway/scanner:latest
+
+    - name: Run Scan
+      run: |
+        docker run -e OSS_USERNAME=ketipig355@mcatag.com \
+                   -e OSS_KEY=daa10afd38ae7efcf4594c7b5b8b54c828c8fe8e \
+                   -e MIXEWAY_URL=https://hub.mixeway.io \
+                   -e MIXEWAY_KEY=aea949d7-55a6-4476-b4bf-6be8de86fb41 \
+                   -e MIXEWAY_PROJECT_ID=159 \
+                   -e MODE=STANDALONE \
+                   -e MIXEWAY_PROJECT_NAME=Ardiegon_lab_secure_app \
+                   -e COMMIT_ID=${{ steps.vars.outputs.sha_short }} \
+                   -e BRANCH=${{ steps.vars.outputs.branch }} \
+                   -v ${{ github.workspace }}:/opt/sources \
+                   mixeway/scanner:latest
